@@ -1,0 +1,100 @@
+# nclimadcp
+
+Python package for reading processed shipboard ADCP data stored in the **NCLIM HDF5 format**
+and converting it to **CODAS-style short-form netCDF** — the standard end-user product
+compatible with pycurrents and most oceanographic analysis tools.
+
+## What it does
+
+The core class `Ensembles` mirrors the IDL `MO_RawEnsembles` structure used in the NANSEN
+Climate ADCP processing chain. It can:
+
+- **Load** a processed ADCP dataset from an NCLIM `.adcp.h5` file (`Ensembles.load()`)
+- **Export** a CODAS-compatible short-form netCDF file containing ocean velocity profiles
+  (u, v), ship velocity (uship, vship), position, depth, amplitude, percent-good, and
+  instrument configuration (`Ensembles.save_as_codas_nc()`)
+- **Store / restore** the full internal object in HDF5 or netCDF4 for downstream IDL or
+  Python processing (`store()`, `store_netcdf()`)
+
+## Installation
+
+```bash
+pip install git+https://github.com/marek-os/nclimadcp.git
+```
+
+Requires Python ≥ 3.9 and the packages `numpy`, `h5py`, and `netCDF4`.
+
+## Command-line tool — `nclim2codas`
+
+After installation the command `nclim2codas` is available on the terminal (Linux, macOS,
+Windows).
+
+```
+usage: nclim2codas [-h] [--platform NAME] [--cruise_id ID] [--sonar SONAR] src trg
+
+Convert a NANSEN Climate ADCP HDF5 file to CODAS short-form netCDF.
+
+positional arguments:
+  src               Source ADCP HDF5 file  (e.g. cruise.adcp.h5)
+  trg               Target netCDF output path  (e.g. cruise_codas.nc)
+
+options:
+  -h, --help        show this help message and exit
+  --platform NAME   Ship / platform name (default: UNSPECIFIED)
+  --cruise_id ID    Cruise identifier; derived from source filename if omitted
+  --sonar SONAR     Sonar / instrument identifier; read from file if omitted
+```
+
+### Examples
+
+Minimal — platform name taken from the file, cruise ID from the filename:
+
+```bash
+nclim2codas  /data/ADCP/cruise.adcp.h5  /data/netcdf/cruise_codas.nc
+```
+
+With metadata:
+
+```bash
+nclim2codas  /data/ADCP/cruise.adcp.h5  /data/netcdf/cruise_codas.nc \
+             --platform  "RV Nansen" \
+             --cruise_id  2023401 \
+             --sonar      os150nb
+```
+
+The tool validates that the source file exists and that the target directory is present
+before reading any data, and exits with an informative error message if either check fails.
+
+## Python API
+
+```python
+from nclimadcp import Ensembles
+
+ens = Ensembles()
+ens.load("cruise.adcp.h5")
+print(ens.dims())          # (nprofs, nbins)
+
+ens.save_as_codas_nc(
+    "cruise_codas.nc",
+    platform="RV Nansen",
+    cruise_id="2023401",
+    sonar="os150nb",
+)
+```
+
+## Output variables (CODAS short form)
+
+| Variable | Description |
+|---|---|
+| `time` | Decimal day from start of year |
+| `lon`, `lat` | GPS position at end of ensemble |
+| `u`, `v` | Ocean eastward / northward velocity (m s⁻¹) |
+| `uship`, `vship` | Ship eastward / northward velocity (m s⁻¹) |
+| `depth` | Bin-centre depths (m, positive down) |
+| `amp` | Received signal strength (ADCP counts) |
+| `pg` | Percent-good pings after editing |
+| `pflag` | Profile editing flags |
+| `heading` | Mean ship heading during ensemble (°) |
+| `tr_temp` | ADCP transducer temperature (°C) |
+| `num_pings` | Number of pings averaged per ensemble |
+| `detected_bottom` | Edited bottom depth along track (m) |

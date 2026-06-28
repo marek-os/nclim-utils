@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nclimadcp"
+version = "0.1.0"
+description = "Python tools for NANSEN Climate ADCP data (CODAS HDF5 → netCDF)"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "h5py",
+    "netCDF4",
+]
+
+[project.scripts]
+"nclim2codas" = "nclimadcp.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["nclimadcp"]
