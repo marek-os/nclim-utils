@@ -30,7 +30,7 @@ Requires Python ≥ 3.9. Dependencies (`numpy`, `h5py`, `netCDF4`) are installed
 automatically.
 
 ```bash
-pip install git+https://github.com/marek-os/nclimadcp.git
+pip install git+https://github.com/marek-os/nclim-utils.git
 ```
 
 On systems with a managed/externally-controlled Python (e.g. Homebrew, Debian/Ubuntu),
