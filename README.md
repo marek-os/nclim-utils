@@ -14,8 +14,7 @@ types; the current functionality is focused on shipboard ADCP data.
 
 ## What it does
 
-The core class `Ensembles` mirrors the IDL `MO_RawEnsembles` structure used in the NANSEN
-Climate ADCP processing chain. It can:
+The core class `Ensembles` 
 
 - **Load** a processed ADCP dataset from an NCLIM `.adcp.h5` file (`Ensembles.load()`)
 - **Export** a CODAS-compatible short-form netCDF file containing ocean velocity profiles
