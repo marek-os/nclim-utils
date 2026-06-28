@@ -1,8 +1,8 @@
-# nclimadcp
+# nclim-utils
 
-Python utilities for working with data from the **NCLIM** (NANSEN Climate) processing
-system. The package is intended to grow over time to cover various NCLIM-related data
-types; the current functionality is focused on shipboard ADCP data.
+Python utilities for working with data from the **NCLIM** processing system. The package
+is intended to grow over time to cover various NCLIM-related data types; the current
+functionality is focused on shipboard ADCP data.
 
 ## Current functionality
 
@@ -14,7 +14,8 @@ types; the current functionality is focused on shipboard ADCP data.
 
 ## What it does
 
-The core class `Ensembles` 
+The core class `Ensembles` represents a processed shipboard ADCP ensemble dataset in the
+NCLIM ADCP processing chain. It can:
 
 - **Load** a processed ADCP dataset from an NCLIM `.adcp.h5` file (`Ensembles.load()`)
 - **Export** a CODAS-compatible short-form netCDF file containing ocean velocity profiles
@@ -25,11 +26,22 @@ The core class `Ensembles`
 
 ## Installation
 
+Requires Python ≥ 3.9. Dependencies (`numpy`, `h5py`, `netCDF4`) are installed
+automatically.
+
 ```bash
 pip install git+https://github.com/marek-os/nclimadcp.git
 ```
 
-Requires Python ≥ 3.9 and the packages `numpy`, `h5py`, and `netCDF4`.
+On systems with a managed/externally-controlled Python (e.g. Homebrew, Debian/Ubuntu),
+add `--break-system-packages`.
+
+**Verify the install:**
+
+```bash
+python -c "import nclimadcp; print(nclimadcp.__file__)"
+nclim2codas --help
+```
 
 ## Command-line tool — `nclim2codas`
 
@@ -39,7 +51,7 @@ Windows).
 ```
 usage: nclim2codas [-h] [--platform NAME] [--cruise_id ID] [--sonar SONAR] src trg
 
-Convert a NANSEN Climate ADCP HDF5 file to CODAS short-form netCDF.
+Convert an NCLIM ADCP HDF5 file to CODAS short-form netCDF.
 
 positional arguments:
   src               Source ADCP HDF5 file  (e.g. cruise.adcp.h5)
