@@ -1,8 +1,16 @@
 # nclimadcp
 
-Python package for reading processed shipboard ADCP data stored in the **NCLIM HDF5 format**
-and converting it to **CODAS-style short-form netCDF** — the standard end-user product
-compatible with pycurrents and most oceanographic analysis tools.
+Python utilities for working with data from the **NCLIM** (NANSEN Climate) processing
+system. The package is intended to grow over time to cover various NCLIM-related data
+types; the current functionality is focused on shipboard ADCP data.
+
+## Current functionality
+
+- **Reader** for processed shipboard ADCP data stored in the native **NCLIM HDF5 format**
+  (`.adcp.h5` files), via the `Ensembles` class.
+- **Command-line converter** (`nclim2codas`) from NCLIM HDF5 to a **CODAS-style short-form
+  netCDF** file — the standard end-user product compatible with pycurrents and most
+  oceanographic analysis tools.
 
 ## What it does
 
@@ -98,3 +106,7 @@ ens.save_as_codas_nc(
 | `tr_temp` | ADCP transducer temperature (°C) |
 | `num_pings` | Number of pings averaged per ensemble |
 | `detected_bottom` | Edited bottom depth along track (m) |
+
+## Roadmap
+
+Additional NCLIM data types and utilities are planned for future releases.
