@@ -94,6 +94,9 @@ nclim2codas  /data/ADCP/cruise.adcp.h5  /data/netcdf/cruise_codas.nc \
 The tool validates that the source file exists and that the target directory is present
 before reading any data, and exits with an informative error message if either check fails.
 
+**NOTE**: The metadata options are required when transforming older HDF5 files —
+files created before 2025 do not have these fields written into them.
+
 ## Python API
 
 ```python
