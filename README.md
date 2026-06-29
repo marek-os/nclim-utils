@@ -21,8 +21,9 @@ NCLIM ADCP processing chain. It can:
 - **Export** a CODAS-compatible short-form netCDF file containing ocean velocity profiles
   (u, v), ship velocity (uship, vship), position, depth, amplitude, percent-good, and
   instrument configuration (`Ensembles.save_as_codas_nc()`)
-- **Store / restore** the full internal object in HDF5 or netCDF4 for downstream IDL or
-  Python processing (`store()`, `store_netcdf()`)
+- **Store / restore** the full internal object in HDF5 for
+  downstream processing (`store()`, `load()`);
+  netCDF export is handled via `save_as_nc()`.
 
 ## Installation
 
@@ -35,6 +36,15 @@ pip install git+https://github.com/marek-os/nclim-utils.git
 
 On systems with a managed/externally-controlled Python (e.g. Homebrew, Debian/Ubuntu),
 add `--break-system-packages`.
+
+## Updating
+
+Since this is installed via git, `pip` won't pick up new commits on a
+plain re-run of `pip install`. To force an update:
+
+```bash
+pip install --force-reinstall --no-deps git+https://github.com/marek-os/nclim-utils.git
+```
 
 **Verify the install:**
 

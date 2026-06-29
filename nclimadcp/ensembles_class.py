@@ -513,13 +513,15 @@ class Ensembles:
         print(f"store(): wrote {self.nprofs}x{self.nbins}  ->  {h5path}  "
               f"[prefix: {prefix}]")
 
-    # -----------------------------------------------------------------------
-    # store_netcdf  — write object to a dimensioned netCDF4 file
-    # -----------------------------------------------------------------------
-    def store_netcdf(self, ncpath: str, root: str = None,
-                     compress: int = 4, overwrite: bool = True) -> None:
+    def _save_as_netcdf_native(self, ncpath: str, root: str = None,
+                               compress: int = 4, overwrite: bool = True) -> None:
         """
         Write the object to netCDF4 in a layout parallel to store() (HDF5).
+
+        DEPRECATED: use save_as_codas_nc() to export data for external use. This
+        method writes the full native (all-variable) layout, mirroring the
+        internal object structure, rather than the CODAS-style short form
+        produced by save_as_nc().
 
         Group  MO_RAWEnsambles.v01/  holds the arrays; sub-group PROPS/ holds
         the packed control vectors. Unlike store(), matrices are written
@@ -533,7 +535,6 @@ class Ensembles:
         compress  : zlib level 0-9 for 2-D variables (default 4)
         overwrite : if True, clobber the whole file; else append (mode 'a')
         """
-        from netCDF4 import Dataset
 
         if not self.isValid():
             raise RuntimeError("store_netcdf(): no data — call read_codas() or load() first.")
@@ -544,19 +545,19 @@ class Ensembles:
         bin_depth = self.depth_bins if self.depth_bins is not None else self.yaxis()
         man_bottom = getattr(self, "MAN_BOTTOM", None)
 
-        with Dataset(ncpath, mode, format="NETCDF4") as nc:
+        with nc4.Dataset(ncpath, mode, format="NETCDF4") as ncfile:
 
             # ---- group nesting --------------------------------------------
-            grp = nc
+            grp = ncfile
             if root is not None:
                 grp = grp.createGroup(root.strip("/"))
             grp = grp.createGroup("MO_RAWEnsambles.v01")
 
             # ---- dimensions -----------------------------------------------
-            grp.createDimension("profile", N)     # set to None for unlimited
-            grp.createDimension("bin",     B)
-            grp.createDimension("two",     2)
-            grp.createDimension("tech",    len(self.techData))
+            grp.createDimension("profile", N)  # set to None for unlimited
+            grp.createDimension("bin", B)
+            grp.createDimension("two", 2)
+            grp.createDimension("tech", len(self.techData))
 
             # ---- helper ---------------------------------------------------
             def V(g, name, data, dims, dtype=None, comp=False, **attrs):
@@ -578,12 +579,12 @@ class Ensembles:
             V(grp, "depth_bins", bin_depth, ("bin",),
               units="m", positive="down", long_name="bin centre depth")
             V(grp, "lon", self.lon, ("profile",),
-              units="degrees_east",  standard_name="longitude")
+              units="degrees_east", standard_name="longitude")
             V(grp, "lat", self.lat, ("profile",),
               units="degrees_north", standard_name="latitude")
 
             # ---- geometry -------------------------------------------------
-            V(grp, "ORIGIN",  self.mOrigin,  ("two",))
+            V(grp, "ORIGIN", self.mOrigin, ("two",))
             V(grp, "SPACING", self.mSpacing, ("two",))
 
             # ---- velocities (mm/s) ----------------------------------------
@@ -644,8 +645,8 @@ class Ensembles:
             # ---- optional GPS / time fix vectors --------------------------
             for nm, arr in (("TRACK_FIX1", self.mTrackFix1),
                             ("TRACK_FIX2", self.mTrackFix2),
-                            ("JDAY_FIX1",  self.mJdayFix1),
-                            ("JDAY_FIX2",  self.mJdayFix2),
+                            ("JDAY_FIX1", self.mJdayFix1),
+                            ("JDAY_FIX2", self.mJdayFix2),
                             ("ENSEMBLE_NO", self.mEnsembleNo)):
                 if arr is not None:
                     V(grp, nm, arr, ("profile",), np.float64)
@@ -658,7 +659,7 @@ class Ensembles:
 
             V(pr, "sm_vrange", self.sm_vrange, ("two",), np.int32)
             V(pr, "sm_arange", self.sm_arange, ("two",), np.int32)
-            V(pr, "wtrange",   self.wtrange,   ("two",), np.int32)
+            V(pr, "wtrange", self.wtrange, ("two",), np.int32)
 
             dblProps = np.array([self.th_amin, self.th_amax, self.th_sog,
                                  self.maxDepth, self.th_maxsog, self.missalign],
@@ -681,43 +682,33 @@ class Ensembles:
                 if i >= len(self.techData):
                     break
                 aname = f"techData_{i:02d}_{fname}"
-                nc.setncattr(aname, float(self.techData[i]))
+                ncfile.setncattr(aname, float(self.techData[i]))
                 if units is None:
                     label = desc + " [units: confirm against CODAS]"
                 elif units:
                     label = f"{desc} [{units}]"
                 else:
                     label = desc
-                nc.setncattr(aname + "_desc", label)
+                ncfile.setncattr(aname + "_desc", label)
 
             # ---- scalar metadata as group attributes ----------------------
-            grp.ID             = self.ID
-            grp.INSTRUMENTID   = self.mInstrumentID
-            grp.yearbase       = int(self.yearbase)
-            grp.nprofs         = int(N)
-            grp.nbins          = int(B)
-            grp.bin_length_m   = float(self.bin_length_m)
-            grp.tr_depth_m     = float(self.tr_depth_m)
-            grp.freq_hz        = float(self.freq_hz)
+            grp.ID = self.ID
+            grp.INSTRUMENTID = self.mInstrumentID
+            grp.yearbase = int(self.yearbase)
+            grp.nprofs = int(N)
+            grp.nbins = int(B)
+            grp.bin_length_m = float(self.bin_length_m)
+            grp.tr_depth_m = float(self.tr_depth_m)
+            grp.freq_hz = float(self.freq_hz)
             grp.avg_interval_s = float(self.avg_interval_s)
-            grp.NOGOOD_LINE    = int(self.mNoGoodLinePos)
-            grp.BEDIT_BYHAND   = int(self.bBottomManually)
-            grp.TVGLIKE        = float(self.mTvgLikePower)
-            grp.Conventions    = "CF-1.8 (partial)"
+            grp.NOGOOD_LINE = int(self.mNoGoodLinePos)
+            grp.BEDIT_BYHAND = int(self.bBottomManually)
+            grp.TVGLIKE = float(self.mTvgLikePower)
+            grp.Conventions = "CF-1.8 (partial)"
 
-        print(f"store_netcdf(): wrote {N}x{B}  ->  {ncpath}")
+        print(f"_save_as_netcdf_native(): wrote {N}x{B}  ->  {ncpath}")
 
-    # -----------------------------------------------------------------------
-    # save_as_nc  — public 'save as netCDF' entry point
-    # -----------------------------------------------------------------------
 
-    def save_as_nc(self, ncpath: str, root: str = None,
-                   compress: int = 4, overwrite: bool = True) -> None:
-        """Public 'save as netCDF' entry point. Currently delegates to
-        store_netcdf(); will be tweaked to match CODAS-generated netCDF
-        formatting."""
-        return self.store_netcdf(ncpath, root=root,
-                                 compress=compress, overwrite=overwrite)
 
     # -----------------------------------------------------------------------
     # convenience
