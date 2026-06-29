@@ -86,8 +86,8 @@ With metadata:
 
 ```bash
 nclim2codas  /data/ADCP/cruise.adcp.h5  /data/netcdf/cruise_codas.nc \
-             --platform  "RV Nansen" \
-             --cruise_id  2023401 \
+             --platform  "Ocean Explorer" \
+             --cruise_id  S2023-01 \
              --sonar      os150nb
 ```
 
